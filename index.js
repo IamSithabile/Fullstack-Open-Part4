@@ -20,7 +20,7 @@ mongoose.connect(mongoUrl).then((result) => {
 app.use(cors());
 app.use(express.json());
 
-app.use(blogRouter);
+app.use("/api/blogs", blogRouter);
 
 app.listen(PORT, () => {
   info(`Server running on port ${PORT}`);
