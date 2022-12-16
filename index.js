@@ -1,27 +1,10 @@
+const app = require("./app");
 const http = require("http");
-const express = require("express");
-const app = express();
-const cors = require("cors");
-const mongoose = require("mongoose");
+const { PORT } = require("./utils/config");
+const { info } = require("./utils/logger");
 
-const { info, error } = require("./utils/logger");
-const { MONGODB_URI, PORT } = require("./utils/config");
-const blogRouter = require("./controller/blogs");
+const server = http.createServer(app);
 
-const mongoUrl = MONGODB_URI;
-mongoose.connect(mongoUrl).then((result) => {
-  if (result) {
-    info("Connected to database");
-  } else {
-    error("Error connectiong to database");
-  }
-});
-
-app.use(cors());
-app.use(express.json());
-
-app.use("/api/blogs", blogRouter);
-
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   info(`Server running on port ${PORT}`);
 });
