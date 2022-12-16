@@ -2,17 +2,6 @@ const dummy = (blogs) => {
   return 1;
 };
 
-const listWithOneBlog = [
-  {
-    _id: "5a422aa71b54a676234d17f8",
-    title: "Go To Statement Considered Harmful",
-    author: "Edsger W. Dijkstra",
-    url: "http://www.u.arizona.edu/~rubinson/copyright_violations/Go_To_Considered_Harmful.html",
-    likes: 5,
-    __v: 0,
-  },
-];
-
 const totalLikes = (blogs) => {
   const likesArray = blogs.map((blog) => blog.likes);
 
@@ -23,9 +12,23 @@ const totalLikes = (blogs) => {
   return likes;
 };
 
-totalLikes(listWithOneBlog);
+const favouriteBlog = (blogs) => {
+  const likesArray = blogs.map((blog) => blog.likes);
+
+  const max = likesArray.reduce((acc, cur) => Math.max(acc, cur));
+
+  const indexOfMax = likesArray.indexOf(max);
+
+  const theFavouriteBlog = blogs[indexOfMax];
+  delete theFavouriteBlog._id;
+  delete theFavouriteBlog.url;
+  delete theFavouriteBlog.__v;
+
+  return theFavouriteBlog;
+};
 
 module.exports = {
   dummy,
   totalLikes,
+  favouriteBlog,
 };
