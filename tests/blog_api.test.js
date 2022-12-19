@@ -61,7 +61,6 @@ test("that a post request creates a blog in database", async () => {
   const newBlog = {
     title: "Becoming a fullstack web developer",
     author: "Shulamy Mananga",
-    likes: 7863,
   };
 
   await api
@@ -76,4 +75,16 @@ test("that a post request creates a blog in database", async () => {
   expect(content.length).toBe(initialBlogs.length + 1);
 
   expect(content[2].id).toBeDefined();
+});
+
+test("when no likes specified it defaults to 0", async () => {
+  const blog = { title: "Why we love blogs", author: "Nosizotha Mananga" };
+
+  await api.post("/api/blogs").send(blog);
+
+  const results = await api.get("/api/blogs");
+
+  const contents = await results.body;
+
+  expect(contents[2].likes).toBe(0);
 });

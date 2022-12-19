@@ -11,7 +11,11 @@ blogRouter.get("/", async (request, response) => {
 });
 
 blogRouter.post("/", async (request, response) => {
-  const blog = new Blog(request.body);
+  const recievedBody = request.body;
+  const blog = new Blog({
+    ...request.body,
+    likes: recievedBody.likes ? recievedBody.likes : 0,
+  });
 
   const result = await blog.save();
 
