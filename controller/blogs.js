@@ -1,19 +1,23 @@
 const blogRouter = require("express").Router();
+require("express-async-errors");
 const Blog = require("../models/blog");
 const { info, error } = require("../utils/logger");
 
-blogRouter.get("/", (request, response) => {
-  Blog.find({})
-    .then((blogs) => {
-      if (blogs.length === 0) {
-        info("There are currently no blogs in database");
-      }
-      if (blogs.length > 0) {
-        info("Here are the blogs:", blogs);
-      }
-      response.json(blogs);
-    })
-    .catch((error) => error("error getting the blogs", error));
+blogRouter.get("/", async (request, response) => {
+  const blogs = await Blog.find({});
+
+  response.status(200).json(blogs);
+
+  // Blog.find({})
+  //   .then((blogs) => {
+  //     if (blogs.length === 0) {
+  //       info("There are currently no blogs in database");
+  //     }
+  //     if (blogs.length > 0) {
+  //       info("Here are the blogs:", blogs);
+  //     }
+  //     response.status(200).json(blogs);
+  //   })
 });
 
 blogRouter.post("/", (request, response) => {
