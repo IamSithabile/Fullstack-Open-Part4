@@ -12,6 +12,12 @@ blogRouter.get("/", async (request, response) => {
 
 blogRouter.post("/", async (request, response) => {
   const recievedBody = request.body;
+
+  if (!recievedBody.title || !recievedBody.url) {
+    console.log("No title");
+    return response.status(400).json({ error: "Title or url unspecified" });
+  }
+
   const blog = new Blog({
     ...request.body,
     likes: recievedBody.likes ? recievedBody.likes : 0,

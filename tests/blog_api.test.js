@@ -88,3 +88,9 @@ test("when no likes specified it defaults to 0", async () => {
 
   expect(contents[2].likes).toBe(0);
 });
+
+test("when no url or title server return 400", async () => {
+  const blog = { author: "jin Yen", title: "How I met your mother" };
+
+  await api.post("/api/blogs").send(blog).expect(400);
+});
