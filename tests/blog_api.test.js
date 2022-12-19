@@ -48,3 +48,11 @@ test("that response contains the word Ways", async () => {
 
   expect(contents).toContain("Ways to write a blog");
 });
+
+test("id to be defined", async () => {
+  const results = await api.get("/api/blogs");
+
+  const contents = await results.body;
+
+  expect(contents[0].id).toBeDefined();
+});
