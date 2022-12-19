@@ -6,30 +6,20 @@ const { info, error } = require("../utils/logger");
 blogRouter.get("/", async (request, response) => {
   const blogs = await Blog.find({});
 
+  info("Here are the blogs:", blogs);
   response.status(200).json(blogs);
-
-  // Blog.find({})
-  //   .then((blogs) => {
-  //     if (blogs.length === 0) {
-  //       info("There are currently no blogs in database");
-  //     }
-  //     if (blogs.length > 0) {
-  //       info("Here are the blogs:", blogs);
-  //     }
-  //     response.status(200).json(blogs);
-  //   })
 });
 
-blogRouter.post("/", (request, response) => {
+blogRouter.post("/", async (request, response) => {
   const blog = new Blog(request.body);
 
-  blog
-    .save()
-    .then((result) => {
-      info("blog saved", result);
-      response.status(201).json(result);
-    })
-    .catch((error) => error("There has been an error saving the blog:", error));
+  const result = await blog.save();
+
+  const body = await result.body;
+
+  info("blog saved", body);
+
+  response.status(201).json(body);
 });
 
 module.exports = blogRouter;

@@ -29,7 +29,7 @@ beforeEach(async () => {
 });
 
 test("that correct amount of blogs are returned", async () => {
-  const resultBlogs = await api
+  await api
     .get("/api/blogs")
     .expect(200)
     .expect("Content-Type", /application\/json/);
@@ -55,4 +55,25 @@ test("id to be defined", async () => {
   const contents = await results.body;
 
   expect(contents[0].id).toBeDefined();
+});
+
+test("that a post request creates a blog in database", async () => {
+  const newBlog = {
+    title: "Becoming a fullstack web developer",
+    author: "Shulamy Mananga",
+    likes: 7863,
+  };
+
+  await api
+    .post("/api/blogs")
+    .send(newBlog)
+    .expect(201)
+    .expect("content-type", /application\/json/);
+
+  const result = await api.get("/api/blogs");
+
+  const content = await result.body;
+  expect(content.length).toBe(initialBlogs.length + 1);
+
+  expect(content[2].id).toBeDefined();
 });
