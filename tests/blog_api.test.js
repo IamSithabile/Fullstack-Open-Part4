@@ -5,20 +5,7 @@ const Blog = require("../models/blog");
 
 const api = supertest(app);
 
-const initialBlogs = [
-  { title: "Ways to write a blog", author: "Sithabile Mananga", likes: 234 },
-  { title: "How to NOT write a blog", author: "Ahlonele Mananga", likes: 356 },
-];
-
-// beforeEach(async () => {
-//   await Blog.deleteMany({});
-
-//   let blog = await new Blog(initialBlogs[0]);
-//   await blog.save();
-
-//   blog = await new Blog(initialBlogs[1]);
-//   await blog.save();
-// });
+const { initialBlogs, blogsInDb, nonExistingId } = require("./test_helper");
 
 beforeEach(async () => {
   await Blog.deleteMany({});
@@ -28,69 +15,115 @@ beforeEach(async () => {
   await Promise.all(promiseArray);
 });
 
-test("that correct amount of blogs are returned", async () => {
-  await api
-    .get("/api/blogs")
-    .expect(200)
-    .expect("Content-Type", /application\/json/);
+describe("when getting blogs from /api/blogs, i want to test", () => {
+  test("that the correct amount of blogs are returned", async () => {
+    await api
+      .get("/api/blogs")
+      .expect(200)
+      .expect("Content-Type", /application\/json/);
 
-  const response = await api.get("/api/blogs");
+    const response = await api.get("/api/blogs");
 
-  const contents = await response.body.map((blog) => blog.title);
+    const contents = await response.body.map((blog) => blog.title);
 
-  expect(contents).toHaveLength(initialBlogs.length);
+    expect(contents).toHaveLength(initialBlogs.length);
+  });
+
+  test("that response contains the word Ways", async () => {
+    const response = await api.get("/api/blogs");
+
+    const contents = await response.body.map((blog) => blog.title);
+
+    expect(contents).toContain("Ways to write a blog");
+  });
+
+  test("that the id is defined", async () => {
+    const results = await api.get("/api/blogs");
+
+    const contents = await results.body;
+
+    expect(contents[0].id).toBeDefined();
+  });
 });
 
-test("that response contains the word Ways", async () => {
-  const response = await api.get("/api/blogs");
+describe("When sending a post, i want to test ", () => {
+  test("that a post request creates a blog in database", async () => {
+    const newBlog = {
+      title: "Becoming a fullstack web developer",
+      author: "Shulamy Mananga",
+      url: "some url",
+    };
 
-  const contents = await response.body.map((blog) => blog.title);
+    await api
+      .post("/api/blogs")
+      .send(newBlog)
+      .expect(201)
+      .expect("content-type", /application\/json/);
 
-  expect(contents).toContain("Ways to write a blog");
+    const result = await api.get("/api/blogs");
+
+    const content = await result.body;
+    expect(content.length).toBe(initialBlogs.length + 1);
+
+    expect(content[2].id).toBeDefined();
+  });
+
+  test("that when no likes are specified it defaults to 0", async () => {
+    const blog = {
+      title: "Why we love blogs",
+      author: "Nosizotha Mananga",
+      url: "some url",
+    };
+
+    await api.post("/api/blogs").send(blog);
+
+    const results = await api.get("/api/blogs");
+
+    const contents = await results.body;
+
+    expect(contents[2].likes).toBe(0);
+  });
+
+  test("that when no url or title is given server returns 400", async () => {
+    const blog = { author: "jin Yen", title: "How I met your mother" };
+
+    await api.post("/api/blogs").send(blog).expect(400);
+  });
 });
 
-test("id to be defined", async () => {
-  const results = await api.get("/api/blogs");
+describe("When sending a delete request, i want to test", () => {
+  test("that if id is valid, status is 204", async () => {
+    const results = await api.get("/api/blogs");
+    const firstBlog = await results.body[0];
+    console.log(firstBlog.id);
 
-  const contents = await results.body;
+    await api.delete(`/api/blogs/${firstBlog.id}`).expect(204);
 
-  expect(contents[0].id).toBeDefined();
+    const result = await api.get("/api/blogs");
+    const blogsRecieved = await result.body;
+
+    expect(blogsRecieved).toHaveLength(initialBlogs.length - 1);
+
+    const contents = blogsRecieved.map((r) => r.title);
+
+    expect(contents).not.toContain(firstBlog.title);
+  });
 });
 
-test("that a post request creates a blog in database", async () => {
-  const newBlog = {
-    title: "Becoming a fullstack web developer",
-    author: "Shulamy Mananga",
-  };
+describe("When updating a blog", () => {
+  test("that the updated likes property is equal 21", async () => {
+    const results = await api.get("/api/blogs");
+    const content = await results.body;
+    const idToUpdate = content[0].id;
+    console.log(idToUpdate);
 
-  await api
-    .post("/api/blogs")
-    .send(newBlog)
-    .expect(201)
-    .expect("content-type", /application\/json/);
+    const updateLikes = { likes: 21 };
 
-  const result = await api.get("/api/blogs");
+    const updatedNote = await api
+      .put(`/api/blogs/${idToUpdate}`)
+      .send(updateLikes)
+      .expect(200);
 
-  const content = await result.body;
-  expect(content.length).toBe(initialBlogs.length + 1);
-
-  expect(content[2].id).toBeDefined();
-});
-
-test("when no likes specified it defaults to 0", async () => {
-  const blog = { title: "Why we love blogs", author: "Nosizotha Mananga" };
-
-  await api.post("/api/blogs").send(blog);
-
-  const results = await api.get("/api/blogs");
-
-  const contents = await results.body;
-
-  expect(contents[2].likes).toBe(0);
-});
-
-test("when no url or title server return 400", async () => {
-  const blog = { author: "jin Yen", title: "How I met your mother" };
-
-  await api.post("/api/blogs").send(blog).expect(400);
+    expect(updatedNote.body.likes).toBe(21);
+  });
 });
