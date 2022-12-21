@@ -191,3 +191,76 @@ describe("When there is initially one user in db, I want to test that", () => {
     expect(usersAtEnd).toEqual(usersAtStart);
   });
 });
+
+describe("When attempting to create a user account, I want to test", () => {
+  beforeEach(async () => {
+    await User.deleteMany({});
+
+    const rootUser = new User({ username: "root", password: "superuser" });
+
+    const savedUser = await rootUser.save();
+    console.log("saved root user:", savedUser);
+  });
+
+  test("that creation fails when username or password is not given", async () => {
+    const userWithoutPassword = { username: "TryingMyLuck" };
+    const userWithoutUsername = { password: "TryingMyLuckToo" };
+
+    const usersAtStart = await usersInDb();
+
+    const results = await api
+      .post("/api/users")
+      .send(userWithoutUsername)
+      .expect(401)
+      .expect("content-type", /application\/json/);
+
+    expect(results.body.error).toContain("Username or Password missing");
+
+    const usersAtEnd = await usersInDb();
+
+    expect(usersAtStart).toHaveLength(usersAtEnd.length);
+  });
+
+  test("that creation fails when either password or username is less than 3 characters", async () => {
+    const userWithShortPassword = { username: "TryingMyLuck", password: "as" };
+    const userWithShortUsername = {
+      username: "as",
+      password: "TryingMyLuckToo",
+    };
+
+    const usersAtStart = await usersInDb();
+
+    const results = await api
+      .post("/api/users")
+      .send(userWithShortUsername)
+      .expect(401)
+      .expect("content-type", /application\/json/);
+
+    expect(results.body.error).toContain("Username or Password too short");
+
+    const usersAtEnd = await usersInDb();
+
+    expect(usersAtStart).toHaveLength(usersAtEnd.length);
+  });
+
+  test("that creation fails when username is not unique", async () => {
+    const usernameAlreadyExists = {
+      username: "root",
+      password: "thoughtItWasAvailable",
+    };
+
+    const usersAtStart = await usersInDb();
+
+    const results = await api
+      .post("/api/users")
+      .send(usernameAlreadyExists)
+      .expect(401)
+      .expect("content-type", /application\/json/);
+
+    expect(results.body.error).toContain("Username already exists");
+
+    const usersAtEnd = await usersInDb();
+
+    expect(usersAtStart).toHaveLength(usersAtEnd.length);
+  });
+});

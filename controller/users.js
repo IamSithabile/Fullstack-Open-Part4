@@ -9,15 +9,22 @@ userRouter.get("/", async (request, response) => {
 });
 
 userRouter.post("/", async (request, response) => {
-  const { name, username, password, userId } = request.body;
+  const { name, username, password } = request.body;
 
-  //   const user = await User.findById(userId);
-  //   console.log(user);
+  if (!username || !password) {
+    return response.status(401).json({ error: "Username or Password missing" });
+  }
+
+  if (username.length < 3 || password.length < 3) {
+    return response
+      .status(401)
+      .json({ error: "Username or Password too short" });
+  }
 
   const alreadyExists = await User.findOne({ username });
 
   if (alreadyExists) {
-    return response.status(400).json({ error: "username must be unique" });
+    return response.status(401).json({ error: "Username already exists" });
   }
 
   const saltRounds = 10;
@@ -27,8 +34,6 @@ userRouter.post("/", async (request, response) => {
   const newUser = new User({ name, username, passwordHash });
 
   const returnedUser = await newUser.save();
-
-  //   user.blogs = user.blogs.concat(returnedUser._id);
 
   response.status(201).json(returnedUser);
 });
