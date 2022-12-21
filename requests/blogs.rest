@@ -1,13 +1,18 @@
 POST http://localhost:3003/api/blogs 
 Content-Type: application/json
-Authorization: bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InN1cGVyUm9vdCIsImlkIjoiNjNhMmRmMDhkZjE3NTRmMDRiMDdiYzA4IiwiaWF0IjoxNjcxNjM5MjU1LCJleHAiOjE2NzE2NDI4NTV9.t9I9BfHWmGDniEzYXzata3UzQ0-J0_Bv-Pp6d8Cw-Qc
+Authorization: bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InN1cGVyUm9vdCIsImlkIjoiNjNhMmRmMDhkZjE3NTRmMDRiMDdiYzA4IiwiaWF0IjoxNjcxNjUxNTQzLCJleHAiOjE2NzE2NTUxNDN9.zPxzgAyoO2sNHh0hi1dywWnEUHRzcNkb2pYtYsJ0ruI
 
 {
-      "author": "roy",
-      "title": "The IT crown",
-      "url": "www.itcrowd.com",
+      "author": "to be deleted",
+      "title": "will delete soon",
+      "url": "www.delete.com",
       "likes": 35
 }
 ###
 
 GET http://localhost:3003/api/blogs
+
+###
+
+DELETE http://localhost:3003/api/blogs/63a3183247ed626de9c6f3c4
+Authorization: bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InN1cGVyUm9vdCIsImlkIjoiNjNhMmRmMDhkZjE3NTRmMDRiMDdiYzA4IiwiaWF0IjoxNjcxNjUxNTQzLCJleHAiOjE2NzE2NTUxNDN9.zPxzgAyoO2sNHh0hi1dywWnEUHRzcNkb2pYtYsJ0ruI
