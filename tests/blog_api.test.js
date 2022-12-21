@@ -1,11 +1,18 @@
 const app = require("../app");
 const supertest = require("supertest");
+const bcrypt = require("bcrypt");
 
 const Blog = require("../models/blog");
+const User = require("../models/user");
 
 const api = supertest(app);
 
-const { initialBlogs, blogsInDb, nonExistingId } = require("./test_helper");
+const {
+  initialBlogs,
+  blogsInDb,
+  nonExistingId,
+  usersInDb,
+} = require("./test_helper");
 
 beforeEach(async () => {
   await Blog.deleteMany({});
@@ -17,6 +24,8 @@ beforeEach(async () => {
 
 describe("when getting blogs from /api/blogs, i want to test", () => {
   test("that the correct amount of blogs are returned", async () => {
+    const blogsAtStart = await blogsInDb();
+
     await api
       .get("/api/blogs")
       .expect(200)
@@ -26,7 +35,7 @@ describe("when getting blogs from /api/blogs, i want to test", () => {
 
     const contents = await response.body.map((blog) => blog.title);
 
-    expect(contents).toHaveLength(initialBlogs.length);
+    expect(contents).toHaveLength(blogsAtStart.length);
   });
 
   test("that response contains the word Ways", async () => {
@@ -125,5 +134,60 @@ describe("When updating a blog", () => {
       .expect(200);
 
     expect(updatedNote.body.likes).toBe(21);
+  });
+});
+
+describe("When there is initially one user in db, I want to test that", () => {
+  beforeEach(async () => {
+    await User.deleteMany({});
+
+    const passwordHash = await bcrypt.hash("Admin", 10);
+    const user = new User({ username: "root", passwordHash });
+
+    await user.save();
+  });
+  test("that user creation succeeds with a fresh username", async () => {
+    const usersAtStart = await usersInDb();
+
+    const passwordHash = await bcrypt.hash("rapelang", 10);
+
+    const user = {
+      name: "Mpho Tlou",
+      username: "Mpho",
+      password: "rapelang",
+    };
+
+    const result = await api
+      .post("/api/users")
+      .send(user)
+      .expect(201)
+      .expect("content-type", /application\/json/);
+
+    const returnedUser = await result.body;
+    console.log(returnedUser);
+
+    const usersAtEnd = await usersInDb();
+    console.log(usersAtEnd);
+    expect(returnedUser).not.toContain(returnedUser.passwordHash);
+    expect(usersAtEnd).toHaveLength(usersAtStart.length + 1);
+  });
+
+  test("that the creation fails, if the username already exists", async () => {
+    const usersAtStart = await usersInDb();
+    const newUser = { username: "root", name: "Superuser", password: "Tlou" };
+
+    const results = await api
+      .post("/api/users")
+      .send(newUser)
+      .expect(400)
+      .expect("content-type", /application\/json/);
+
+    const content = await results.body;
+
+    expect(content.error).toContain("username must be unique");
+
+    const usersAtEnd = await usersInDb();
+
+    expect(usersAtEnd).toEqual(usersAtStart);
   });
 });

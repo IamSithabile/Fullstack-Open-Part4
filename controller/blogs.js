@@ -1,35 +1,51 @@
 const blogRouter = require("express").Router();
 require("express-async-errors");
 const Blog = require("../models/blog");
+const User = require("../models/user");
 const { info, error } = require("../utils/logger");
 
 blogRouter.get("/", async (request, response) => {
-  const blogs = await Blog.find({});
+  const blogs = await Blog.find({}).populate("user", { username: 1 });
 
   info("Here are the blogs:", blogs);
   response.status(200).json(blogs);
 });
 
 blogRouter.post("/", async (request, response) => {
-  const recievedBody = request.body;
+  const { title, url, likes, userId, author } = request.body;
 
-  if (!recievedBody.title || !recievedBody.url) {
+  if (!title || !url) {
     console.log("No title");
-    return response.status(400).json({ error: "Title or url unspecified" });
+    return response.status(400).json({ error: "Title or Url unspecified" });
   }
 
+  const user = await User.findById(userId);
+  console.log(
+    "check to see if returned mongoose document object has _id or id",
+    user
+  );
+
   const blog = new Blog({
-    ...request.body,
-    likes: recievedBody.likes ? recievedBody.likes : 0,
+    title,
+    url,
+    user: user._id,
+    author,
+    likes: likes ? likes : 0,
   });
 
-  const result = await blog.save();
+  console.log("blog :", blog);
 
-  const body = await result.body;
+  const savedBlog = await blog.save();
 
-  info("blog saved", body);
+  // info("savedBlog --  _id ?:", savedBlog._id);
 
-  response.status(201).json(body);
+  user.blogs = user.blogs.concat(savedBlog._id);
+
+  const savedUser = await user.save();
+
+  // info("savedUser --   ?:", savedUser);
+
+  response.status(201).json(savedBlog);
 });
 
 blogRouter.delete("/:id", async (request, response) => {
