@@ -56,25 +56,36 @@ describe("when getting blogs from /api/blogs, i want to test", () => {
 });
 
 describe("When sending a post, i want to test ", () => {
-  test("that a post request creates a blog in database", async () => {
+  beforeEach(async () => {
+    await User.deleteMany({});
+
+    const rootUser = new User({ username: "root", password: "superuser" });
+
+    const savedUser = await rootUser.save();
+    console.log("saved root user:", savedUser);
+  });
+
+  test("that a post request creates a blog in database and root user is assigned to the blog", async () => {
     const newBlog = {
-      title: "Becoming a fullstack web developer",
-      author: "Shulamy Mananga",
+      title: "Testing that a random user is assigned",
+      author: " Mananga",
       url: "some url",
     };
+    const blogsAtStart = await blogsInDb();
 
-    await api
+    const result = await api
       .post("/api/blogs")
       .send(newBlog)
       .expect(201)
       .expect("content-type", /application\/json/);
 
-    const result = await api.get("/api/blogs");
+    const savedBlog = await result.body;
+    console.log("Here is the saved blog:", savedBlog);
 
-    const content = await result.body;
-    expect(content.length).toBe(initialBlogs.length + 1);
+    const blogsAtEnd = await blogsInDb();
 
-    expect(content[2].id).toBeDefined();
+    expect(savedBlog.user).toBeDefined();
+    expect(blogsAtEnd).toHaveLength(blogsAtStart.length + 1);
   });
 
   test("that when no likes are specified it defaults to 0", async () => {
@@ -232,7 +243,7 @@ describe("When attempting to create a user account, I want to test", () => {
 
     const results = await api
       .post("/api/users")
-      .send(userWithShortUsername)
+      .send(userWithShortUs)
       .expect(401)
       .expect("content-type", /application\/json/);
 

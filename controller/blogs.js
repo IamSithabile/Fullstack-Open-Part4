@@ -12,18 +12,14 @@ blogRouter.get("/", async (request, response) => {
 });
 
 blogRouter.post("/", async (request, response) => {
-  const { title, url, likes, userId, author } = request.body;
+  const { title, url, likes, author } = request.body;
 
   if (!title || !url) {
     console.log("No title");
     return response.status(400).json({ error: "Title or Url unspecified" });
   }
 
-  const user = await User.findById(userId);
-  console.log(
-    "check to see if returned mongoose document object has _id or id",
-    user
-  );
+  const user = await User.findOne();
 
   const blog = new Blog({
     title,
@@ -37,13 +33,9 @@ blogRouter.post("/", async (request, response) => {
 
   const savedBlog = await blog.save();
 
-  // info("savedBlog --  _id ?:", savedBlog._id);
-
   user.blogs = user.blogs.concat(savedBlog._id);
 
   const savedUser = await user.save();
-
-  // info("savedUser --   ?:", savedUser);
 
   response.status(201).json(savedBlog);
 });
