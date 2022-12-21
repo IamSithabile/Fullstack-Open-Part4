@@ -1,13 +1,13 @@
-POST http://localhost:3003/api/blogs
-Content-Type: application/application/json
+POST http://localhost:3003/api/blogs 
+Content-Type: application/json
+Authorization: bearer TOKENHERE
 
 {
-      "author": "Siphelo ",
+      "author": "Ada lovelace",
       "title": "Green leaves rock",
-      "url": "www.greenlife.com",
+      "url": "www.allaboutgreenlife.com",
       "likes": 35
 }
-
 ###
 
 GET http://localhost:3003/api/blogs
