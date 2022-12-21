@@ -17,21 +17,11 @@ blogRouter.post("/", async (request, response) => {
   const { title, url, likes, author } = request.body;
 
   if (!title || !url) {
-    console.log("No title");
+    console.log("Error :-> No title");
     return response.status(400).json({ error: "Title or Url unspecified" });
   }
 
-  const getTokenFrom = (request) => {
-    const authorization = request.get("authorization");
-    if (authorization && authorization.toLowerCase().startsWith("bearer ")) {
-      return authorization.substring(7);
-    }
-    return null;
-  };
-
-  const token = getTokenFrom(request);
-
-  const decodedToken = jwt.verify(token, process.env.SECRET);
+  const decodedToken = jwt.verify(request.token, process.env.SECRET);
   if (!decodedToken.id) {
     return response.status(401).json({ error: "token missing or invalid" });
   }
@@ -44,8 +34,6 @@ blogRouter.post("/", async (request, response) => {
     author,
     likes: likes ? likes : 0,
   });
-
-  console.log("blog :", blog);
 
   const savedBlog = await blog.save();
 

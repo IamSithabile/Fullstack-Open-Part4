@@ -20,8 +20,19 @@ mongoose.connect(MONGODB_URI).then((result) => {
 app.use(cors());
 app.use(express.json());
 
+const tokenExtractor = (request, response, next) => {
+  if (!request.headers["authorization"]) return next();
+
+  const authorization = request.get("Authorization");
+  const token = authorization.substring(7);
+  request.token = token;
+
+  next();
+};
+
+app.use(tokenExtractor);
+app.use("/api/login", loginRouter);
 app.use("/api/blogs", blogRouter);
 app.use("/api/users", userRouter);
-app.use("/api/login", loginRouter);
 
 module.exports = app;
