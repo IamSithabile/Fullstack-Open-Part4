@@ -1,0 +1,13 @@
+POST http://localhost:3003/api/blogs
+Content-Type: application/application/json
+
+{
+      "author": "Siphelo ",
+      "title": "Green leaves rock",
+      "url": "www.greenlife.com",
+      "likes": 35
+}
+
+###
+
+GET http://localhost:3003/api/blogs

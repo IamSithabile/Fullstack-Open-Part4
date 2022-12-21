@@ -1,0 +1,19 @@
+POST http://localhost:3003/api/login
+Content-Type: application/json
+
+{
+    "username": "superRoot",
+    "password": "poweruser"
+}
+
+
+
+// {
+//     "username":"root",
+//     "password":"Admin"
+// }
+
+// {
+//     "username":"superRoot",
+//     "password":"poweruser"
+// }

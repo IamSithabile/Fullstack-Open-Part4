@@ -17,20 +17,3 @@ userSchema.set("toJSON", {
 });
 const User = mongoose.model("User", userSchema);
 module.exports = User;
-
-// {
-//       "author": "Mpho Tlou",
-//       "title": "Why is procrastinatoin bad for you",
-//       "url": "www.whyyoupracrastinate.com",
-//       "userId":"63a1c3d75360cf8479117d5d"
-//     }
-
-// {
-//     "username":"root",
-//     "password":"Admin"
-// }
-
-// {
-//     "username":"superRoot",
-//     "password":"poweruser"
-// }
