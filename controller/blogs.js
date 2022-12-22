@@ -21,11 +21,13 @@ blogRouter.post("/", async (request, response) => {
     return response.status(400).json({ error: "Title or Url unspecified" });
   }
 
-  const decodedToken = jwt.verify(request.token, process.env.SECRET);
-  if (!decodedToken.id) {
+  const token = request.token;
+  const user = request.user;
+
+  const decodedToken = jwt.verify(token, process.env.SECRET);
+  if (!decodedToken.id || !user) {
     return response.status(401).json({ error: "token missing or invalid" });
   }
-  const user = await User.findById(decodedToken.id);
 
   const blog = new Blog({
     title,
@@ -46,19 +48,14 @@ blogRouter.post("/", async (request, response) => {
 
 blogRouter.delete("/:id", async (request, response) => {
   const id = request.params.id;
-  const token = request.token;
-
-  const decodedToken = jwt.verify(token, process.env.SECRET);
-
-  if (!decodedToken.id) {
-    return response.status(401).json({ error: "Invalid token" });
-  }
-
-  const tokenUserId = decodedToken.id;
-
   const blog = await Blog.findById(id);
 
-  console.log(blog);
+  if (!blog.user) {
+    return response.status(401).json({ error: "No such user exists" });
+  }
+
+  const tokenUserId = request.user._id;
+  console.log(tokenUserId);
 
   if (blog.user.toString() !== tokenUserId.toString()) {
     return response
