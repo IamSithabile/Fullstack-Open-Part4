@@ -49,7 +49,7 @@ const userExtractor = async (request, response, next) => {
 
   request.user = user;
 
-  console.log(user);
+  // console.log(user);
 
   next();
 };

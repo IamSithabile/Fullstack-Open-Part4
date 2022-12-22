@@ -1,10 +1,12 @@
 const app = require("../app");
 const supertest = require("supertest");
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
 const Blog = require("../models/blog");
 const User = require("../models/user");
 
+const loginRouter = require("../controller/login");
 const api = supertest(app);
 
 const {
@@ -14,15 +16,15 @@ const {
   usersInDb,
 } = require("./test_helper");
 
-beforeEach(async () => {
-  await Blog.deleteMany({});
-
-  const blogList = initialBlogs.map((blog) => new Blog(blog)); // This is the process the server would take to convert a normal post to one that has the format the database expects
-  const promiseArray = blogList.map((blog) => blog.save());
-  await Promise.all(promiseArray);
-});
-
 describe("when getting blogs from /api/blogs, i want to test", () => {
+  beforeEach(async () => {
+    await Blog.deleteMany({});
+
+    const blogList = initialBlogs.map((blog) => new Blog(blog)); // This is the process the server would take to convert a normal post to one that has the format the database expects
+    const promiseArray = blogList.map((blog) => blog.save());
+    await Promise.all(promiseArray);
+  });
+
   test("that the correct amount of blogs are returned", async () => {
     const blogsAtStart = await blogsInDb();
 
@@ -59,34 +61,65 @@ describe("When sending a post, i want to test ", () => {
   beforeEach(async () => {
     await User.deleteMany({});
 
-    const rootUser = new User({ username: "root", password: "superuser" });
+    const rootUser = new User({ username: "root", password: "Admin" });
 
     const savedUser = await rootUser.save();
-    console.log("saved root user:", savedUser);
-  });
+    // console.log("saved root user:", savedUser);
+  }, 20000);
 
-  test("that a post request creates a blog in database and root user is assigned to the blog", async () => {
+  test("that a post request creates a blog in database when token is correct", async () => {
     const newBlog = {
-      title: "Testing that a random user is assigned",
+      title: "Testing that when valid a token provided blog is posted",
       author: " Mananga",
       url: "some url",
     };
+
     const blogsAtStart = await blogsInDb();
+    const user = await User.findOne({ username: "root" });
+    const userForToken = { username: "root", id: user._id };
+    const token = jwt.sign(userForToken, process.env.SECRET, {
+      expiresIn: 60 * 60,
+    });
 
     const result = await api
       .post("/api/blogs")
+      .set({
+        Authorization: `Bearer ${token}`,
+      })
       .send(newBlog)
       .expect(201)
       .expect("content-type", /application\/json/);
 
     const savedBlog = await result.body;
-    console.log("Here is the saved blog:", savedBlog);
-
     const blogsAtEnd = await blogsInDb();
 
     expect(savedBlog.user).toBeDefined();
     expect(blogsAtEnd).toHaveLength(blogsAtStart.length + 1);
-  });
+  }, 20000);
+
+  test("that a post request fails when token is incorrect", async () => {
+    const newBlog = {
+      title: "Testing that when valid a token provided blog is posted",
+      author: " Mananga",
+      url: "some url",
+    };
+
+    const blogsAtStart = await blogsInDb();
+
+    const result = await api
+      .post("/api/blogs")
+      .set({
+        Authorization:
+          "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InJvb3QiLCJpZCI6IjYzYTFmMmQxM2U5OTQ2Njc0ZmE0ZmFjMiIsImlhdCI6MTY3MTY5Nzg3NiwiZXhwIjoxNjcxNzAxNDc2fQ.vzjerryxhZVwd5p7ZxTm2L-PoJs7izxZrnfnx0ZdMOI",
+      })
+      .send(newBlog)
+      .expect(401)
+      .expect("content-type", /application\/json/);
+
+    const blogsAtEnd = await blogsInDb();
+
+    expect(blogsAtEnd).toHaveLength(blogsAtStart.length);
+  }, 20000);
 
   test("that when no likes are specified it defaults to 0", async () => {
     const blog = {
@@ -95,7 +128,16 @@ describe("When sending a post, i want to test ", () => {
       url: "some url",
     };
 
-    await api.post("/api/blogs").send(blog);
+    const user = await User.findOne({ username: "root" });
+    const userForToken = { username: "root", id: user._id };
+    const token = jwt.sign(userForToken, process.env.SECRET, {
+      expiresIn: 60 * 60,
+    });
+
+    await api
+      .post("/api/blogs")
+      .set({ Authorization: `Bearer ${token}` })
+      .send(blog);
 
     const results = await api.get("/api/blogs");
 
@@ -107,7 +149,17 @@ describe("When sending a post, i want to test ", () => {
   test("that when no url or title is given server returns 400", async () => {
     const blog = { author: "jin Yen", title: "How I met your mother" };
 
-    await api.post("/api/blogs").send(blog).expect(400);
+    const user = await User.findOne({ username: "root" });
+    const userForToken = { username: "root", id: user._id };
+    const token = jwt.sign(userForToken, process.env.SECRET, {
+      expiresIn: 60 * 60,
+    });
+
+    await api
+      .post("/api/blogs")
+      .set({ Authorization: `Bearer ${token}` })
+      .send(blog)
+      .expect(400);
   });
 });
 
@@ -115,7 +167,7 @@ describe("When sending a delete request, i want to test", () => {
   test("that if id is valid, status is 204", async () => {
     const results = await api.get("/api/blogs");
     const firstBlog = await results.body[0];
-    console.log(firstBlog.id);
+    // console.log(firstBlog.id);
 
     await api.delete(`/api/blogs/${firstBlog.id}`).expect(204);
 
@@ -135,7 +187,7 @@ describe("When updating a blog", () => {
     const results = await api.get("/api/blogs");
     const content = await results.body;
     const idToUpdate = content[0].id;
-    console.log(idToUpdate);
+    // console.log(idToUpdate);
 
     const updateLikes = { likes: 21 };
 
@@ -175,10 +227,10 @@ describe("When there is initially one user in db, I want to test that", () => {
       .expect("content-type", /application\/json/);
 
     const returnedUser = await result.body;
-    console.log(returnedUser);
+    // console.log(returnedUser);
 
     const usersAtEnd = await usersInDb();
-    console.log(usersAtEnd);
+    // console.log(usersAtEnd);
     expect(returnedUser).not.toContain(returnedUser.passwordHash);
     expect(usersAtEnd).toHaveLength(usersAtStart.length + 1);
   });
@@ -210,7 +262,7 @@ describe("When attempting to create a user account, I want to test", () => {
     const rootUser = new User({ username: "root", password: "superuser" });
 
     const savedUser = await rootUser.save();
-    console.log("saved root user:", savedUser);
+    // console.log("saved root user:", savedUser);
   });
 
   test("that creation fails when username or password is not given", async () => {

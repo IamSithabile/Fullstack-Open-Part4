@@ -17,7 +17,7 @@ blogRouter.post("/", async (request, response) => {
   const { title, url, likes, author } = request.body;
 
   if (!title || !url) {
-    console.log("Error :-> No title");
+    // console.log("Error :-> No title");
     return response.status(400).json({ error: "Title or Url unspecified" });
   }
 
@@ -27,6 +27,10 @@ blogRouter.post("/", async (request, response) => {
   const decodedToken = jwt.verify(token, process.env.SECRET);
   if (!decodedToken.id || !user) {
     return response.status(401).json({ error: "token missing or invalid" });
+  }
+
+  if (decodedToken.id !== user._id.toString()) {
+    return response.status(401).json({ error: "Unauthorized" });
   }
 
   const blog = new Blog({
@@ -55,7 +59,6 @@ blogRouter.delete("/:id", async (request, response) => {
   }
 
   const tokenUserId = request.user._id;
-  console.log(tokenUserId);
 
   if (blog.user.toString() !== tokenUserId.toString()) {
     return response
