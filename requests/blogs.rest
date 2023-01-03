@@ -10,7 +10,16 @@ Authorization: bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InJvb
 }
 ###
 
-GET http://localhost:3003/api/blogs
+POST http://localhost:3003/api/blogs/63a5fea4f9d801e56eb3f073/comments
+Content-Type: application/json
+Authorization: bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InJvb3QiLCJpZCI6IjYzYTFmMmQxM2U5OTQ2Njc0ZmE0ZmFjMiIsImlhdCI6MTY3MjczNDIxNywiZXhwIjoxNjcyNzM3ODE3fQ.0YDNUDSJuv-oIYPykGsrJFz3evS-7VOVQrnn5U-qsp0
+
+{
+      "comment": "it pours "
+}
+###
+
+GET http://localhost:3003/api/blogs/63a5fea4f9d801e56eb3f073
 
 ###
 

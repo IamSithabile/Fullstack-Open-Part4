@@ -4,13 +4,38 @@ const jwt = require('jsonwebtoken')
 
 const Blog = require('../models/blog')
 const User = require('../models/user')
+const Comment = require('../models/comment')
 const { info, error } = require('../utils/logger')
+const { validate } = require('../models/comment')
 
 blogRouter.get('/', async (request, response) => {
   const blogs = await Blog.find({}).populate('user', { username: 1 })
 
   // info("Here are the blogs:", blogs);
   response.status(200).json(blogs)
+})
+
+blogRouter.get('/:id', async (request, response) => {
+  const id = request.params.id
+  const blog = await Blog.findById(id).populate('comments')
+  console.log('A id speifi blog -->', blog)
+
+  // info("Here are the blogs:", blogs);
+  response.status(200).json(blog)
+})
+
+blogRouter.post('/:id/comments', async (request, response) => {
+  const id = request.params.id
+  const blog = await Blog.findById(id)
+
+  const comment = request.body
+
+  const newComment = new Comment(comment)
+  await newComment.save()
+  console.log('A new comment', newComment)
+  blog.comments.push(newComment)
+  console.log('blog.comments after push', blog.comments)
+  blog.save()
 })
 
 blogRouter.post('/', async (request, response) => {
