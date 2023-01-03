@@ -32,10 +32,9 @@ blogRouter.post('/:id/comments', async (request, response) => {
 
   const newComment = new Comment(comment)
   await newComment.save()
-  console.log('A new comment', newComment)
   blog.comments.push(newComment)
-  console.log('blog.comments after push', blog.comments)
   blog.save()
+  response.status(201).json(blog)
 })
 
 blogRouter.post('/', async (request, response) => {
